@@ -121,6 +121,8 @@
 # include <malloc.h>
 #endif
 
+#include <minicriu-client.h>
+
 #ifndef _GNU_SOURCE
   #define _GNU_SOURCE
   #include <sched.h>
@@ -826,6 +828,8 @@ bool os::Linux::manually_expand_stack(JavaThread * t, address addr) {
 
 // Thread start routine for all newly created threads
 static void *thread_native_entry(Thread *thread) {
+
+  minicriu_register_new_thread();
 
   thread->record_stack_base_and_size();
 
@@ -5832,6 +5836,13 @@ static bool compute_crengine() {
 }
 
 static int call_crengine() {
+  minicriu_dump();
+  char msg[128];
+  int len = snprintf(msg, sizeof(msg), "JVM native restored %d (%d)\n", os::Linux::gettid(), getpid());;
+  int r = write(1, msg, len);
+  tty->print_cr("JVM restored");
+  return 0;
+
   if (!_crengine) {
     return -1;
   }
@@ -5931,6 +5942,7 @@ static int checkpoint_restore(char** argp) {
   trace_cr("Checkpoint ...");
 
   int cres = call_crengine();
+  return 0;
   if (cres < 0) {
     return JVM_CHECKPOINT_ERROR;
   }
