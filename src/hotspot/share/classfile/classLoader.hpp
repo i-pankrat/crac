@@ -397,6 +397,9 @@ class ClassLoader: AllStatic {
   // distinguish from a class_name with no package name, as both cases have a NULL return value
   static Symbol* package_from_class_name(const Symbol* class_name, bool* bad_class_name = NULL);
 
+  static void checkpoint();
+  static void restore();
+
   // Debugging
   static void verify()              PRODUCT_RETURN;
 };

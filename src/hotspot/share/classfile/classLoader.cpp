@@ -110,6 +110,7 @@ static JImageGetResource_t             JImageGetResource      = NULL;
 
 // JimageFile pointer, or null if exploded JDK build.
 static JImageFile*                     JImage_file            = NULL;
+#define JIMAGEFILE_PLACEHOLDER ((JImageFile*)0x1)
 
 // Globals
 
@@ -1409,6 +1410,28 @@ char* lookup_vm_resource(JImageFile *jimage, const char *jimage_version, const c
   (*JImageGetResource)(jimage, location, val, size);
   val[size] = '\0';
   return val;
+}
+
+void ClassLoader::checkpoint() {
+  if (!JImage_file) {
+    return;
+  }
+  (*JImageClose)(JImage_file);
+  JImage_file = JIMAGEFILE_PLACEHOLDER;
+}
+
+void ClassLoader::restore() {
+  if (JImage_file != JIMAGEFILE_PLACEHOLDER) {
+    return;
+  }
+
+  jint error;
+  char modules_path[JVM_MAXPATHLEN];
+  const char* fileSep = os::file_separator();
+
+  jio_snprintf(modules_path, JVM_MAXPATHLEN, "%s%slib%smodules", Arguments::get_java_home(), fileSep, fileSep);
+  JImage_file =(*JImageOpen)(modules_path, &error);
+  guarantee(JImage_file, "should be able to find the image again (error %d)", error);
 }
 
 // Lookup VM options embedded in the modules jimage file

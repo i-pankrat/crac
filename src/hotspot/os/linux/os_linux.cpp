@@ -81,6 +81,8 @@
 #include "utilities/powerOfTwo.hpp"
 #include "utilities/vmError.hpp"
 
+#include "classfile/classLoader.hpp"
+
 // put OS-includes here
 # include <arpa/inet.h>
 # include <sys/types.h>
@@ -5617,6 +5619,9 @@ void os::Linux::vm_create_start() {
   if (!CRaCCheckpointTo) {
     return;
   }
+
+  minicriu_register_new_thread();
+
   _vm_inited_fds.initialize();
 }
 
@@ -6083,6 +6088,8 @@ void VM_Crac::doit() {
   do_classpaths(mark_all_in, &fds, Arguments::get_ext_dirs());
   mark_persistent(&fds);
 
+  ClassLoader::checkpoint();
+
   // dry-run fails checkpoint
   bool ok = !_dry_run;
 
@@ -6171,6 +6178,8 @@ void VM_Crac::doit() {
   }
 
   PerfMemoryLinux::restore();
+
+  ClassLoader::restore();
 
   _ok = true;
 }
