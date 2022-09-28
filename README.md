@@ -2,21 +2,17 @@
 
 ## Build
 
-CRaC JDK have extended build procedure.
+CRaC JDK with Minicriu have extended build procedure.
 
-1. Build JDK as usual
+1. Build the minicriu project
 ```
-bash configure
+git clone https://github.com/CRaC/minicriu
+make -C minicriu
+```
+
+2. Minicriu is not directly supported by the build system, you need to provide the path via C/C++ flags
+
+```
+bash configure --with-extra-cxxflags=-I$PWD/minicriu --with-extra-ldflags="-L$PWD/minicriu -lminicriu-client"
 make images
-mv build/linux-x86_64-server-release/images/jdk/ .
-```
-2. Download a build of [modified CRIU](https://github.com/org-crac/criu/releases/tag/release-crac)
-3. Extract and copy `criu` binary over a same named file in the JDK
-```
-cp criu-dist/sbin/criu jdk/lib/criu
-```
-Grant permissions to allow regular user to run it
-```
-sudo chown root:root jdk/lib/criu
-sudo chmod u+s jdk/lib/criu
 ```
